@@ -6,7 +6,8 @@ from wtforms.validators import InputRequired
 from flask_migrate import Migrate
 import random
 from random import shuffle
-
+# from OAuth import google_login
+from flask_dance.contrib.google import make_google_blueprint, google
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'SECRET'
@@ -81,6 +82,23 @@ class MyForm(FlaskForm):
 	radios2 = RadioField(choices=[('1', '2 [most confident]'),('2', '1'),('3','0 [least confident]')])
 	radios3 = RadioField(choices=[('1', 'Within 10% of the size of the variant'),('2', 'Not within 10% of the size of the variant'),('3','Unsure')])
 
+google_blueprint =  make_google_blueprint(client_id='198432854470-8or4s0j1r899khmq0p72fmi4mmj968iq.apps.googleusercontent.com', client_secret='xSKeuuHrbyQKFTg94ADaJH9B')
+app.register_blueprint(google_blueprint, url_prefix='/google_login')
+
+@app.route('/google')
+def google_login():
+	if not google.authorized:
+		return redirect(url_for('google.login'))
+	account_info = google.get('plus/v1/people/me')
+
+	if account_info.ok:
+		account_info_json = account_info.json()
+
+		print (account_info_json['emails'])
+
+@app.route('/')
+def home():
+	return render_template('home.html')
 
 @app.route('/<string:variant_id>', methods=['GET', 'POST'])
 def index(variant_id):
